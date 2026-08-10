@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OSIS SMA SANTO PETRUS SIDIKALANG</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eef2f5; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .card { background: white; border-radius: 16px; padding: 32px; width: 100%; max-width: 440px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+    h2 { text-align: center; color: #1e293b; margin-top: 0; margin-bottom: 4px; font-size: 22px; }
+    p.subtitle { text-align: center; color: #64748b; font-size: 13px; margin-bottom: 20px; margin-top: 0; }
+    .alert { background: #fffbebfb; color: #b45309; padding: 12px; border-radius: 8px; font-size: 12px; margin-bottom: 20px; border: 1px solid #fde68a; }
+    .alert strong { color: #92400e; }
+    .form-group { margin-bottom: 18px; }
+    label { font-weight: 600; display: block; margin-bottom: 8px; color: #334155; font-size: 14px; }
+    input[type="text"] { width: 100%; padding: 12px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; transition: 0.2s; }
+    input[type="text"]:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+    
+    .option-card { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-bottom: 12px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.2s; font-size: 14px; color: #1e293b; }
+    .option-card:hover { border-color: #2563eb; background: #f8fafc; }
+    .option-card input[type="radio"] { accent-color: #2563eb; transform: scale(1.1); }
+
+    button { width: 100%; background: #2563eb; color: white; border: none; padding: 14px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    button:hover { background: #1d4ed8; }
+    button:disabled { background: #94a3b8; cursor: not-allowed; }
+    
+    .btn-secondary { background: #f1f5f9; color: #475569; margin-top: 8px; }
+    .btn-secondary:hover { background: #e2e8f0; }
+
+    /* Helper untuk sembunyikan section */
+    .hidden { display: none; }
+    
+    /* Display NISN terkonfirmasi */
+    .user-badge { background: #f1f5f9; padding: 10px 14px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: #475569; display: flex; justify-content: space-between; align-items: center; }
+    .user-badge strong { color: #0f172a; }
+
+    /* Overlay Fullscreen */
+    #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; text-align: center; padding: 20px; }
+    #overlay button { width: auto; padding: 12px 30px; }
+  </style>
+</head>
+<body>
+
+  <!-- Screen Lock Overlay -->
+  <div id="overlay">
+    <h2>E-Voting OSIS</h2>
+    <p style="color: #94a3b8; font-size: 14px;">SMA Santo Petrus Sidikalang</p>
+    <p style="color: #cbd5e1; font-size: 13px; max-width: 320px; margin-bottom: 24px; line-height: 1.5;">
+      Sistem akan mengarahkan anda ke Tampilan Layar Penuh dan di monitoring oleh sistem.
+    </p>
+    <button onclick="startApp()">Start Voting</button>
+  </div>
+
+  <div class="card">
+    <h2>E-Voting OSIS</h2>
+    <p class="subtitle">SMA Santo Petrus Sidikalang</p>
+
+    <div class="alert">
+      <strong>Attention:</strong> Sistem akan mendeteksi anda keluar dari tab/membuka tab lain.
+    </div>
+
+    <!-- STEP 1: INPUT NISN -->
+    <div id="step1">
+      <div class="form-group">
+        <label for="nisnInput">NISN:</label>
+        <input type="text" id="nisnInput" placeholder="Enter Your NISN" autofocus>
+      </div>
+      <button type="button" onclick="goToStep2()">Next &rarr;</button>
+    </div>
+
+    <!-- STEP 2: PILIH KANDIDAT (SEMBUNYI SAAT AWAL) -->
+    <div id="step2" class="hidden">
+      <div class="user-badge">
+        <span>NISN: <strong id="displayNisn">-</strong></span>
+        <span style="color: #2563eb; cursor: pointer; text-decoration: underline; font-size: 12px;" onclick="backToStep1()">Change</span>
+      </div>
+
+      <form id="voteForm">
+        <div class="form-group">
+          <label>SILAHKAN PILIH KANDIDAT:</label>
+
+          <label class="option-card">
+            <input type="radio" name="kandidat" value="Paslon 01 - Peer Candidate 1" required>
+            <span><strong>01.</strong> Peer Candidate 1</span>
+          </label>
+
+          <label class="option-card">
+            <input type="radio" name="kandidat" value="Paslon 02 - Candidate Pair 2">
+            <span><strong>02.</strong> Candidate Pair 2</span>
+          </label>
+        </div>
+
+        <button type="submit" id="btnSubmit">KIRIM/button>
+      </form>
+    </div>
+
+  </div>
+
+  <script>
+    // URL Web App Google Apps Script
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwthGXgV_LgfNCLLd-zYE4O-sJlvykmoFjqW5ER5VyMeMtb-1vi0uCHjiCGi2ngEQC5/exec"; 
+
+    let jumlahPindahTab = 0;
+    let savedNisn = "";
+
+    function startApp() {
+      document.getElementById('overlay').style.display = 'none';
+      let elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        elem.requestFullscreen().catch(() => {});
+      }
+    }
+
+    // Fungsi Validasi Lokal NISN & Pindah ke Step 2
+    function goToStep2() {
+      const nisnVal = document.getElementById('nisnInput').value.trim();
+      if (!nisnVal) {
+        alert("Please enter your NISN/Student ID first!");
+        return;
+      }
+
+      savedNisn = nisnVal;
+      document.getElementById('displayNisn').innerText = savedNisn;
+      
+      // Sembunyikan Step 1, Tampilkan Step 2
+      document.getElementById('step1').classList.add('hidden');
+      document.getElementById('step2').classList.remove('hidden');
+    }
+
+    // Kembali ke Step 1 jika ingin mengganti NISN
+    function backToStep1() {
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('step1').classList.remove('hidden');
+    }
+
+    // Deteksi Pindah Tab
+    document.addEventListener('visibilitychange', function() {
+      if (document.hidden) {
+        jumlahPindahTab++;
+        alert(`WARNING! Anda meninggalkan Tab (${jumlahPindahTab}x)! Aktifitas ini di rekam.`);
+      }
+    });
+
+    // Kirim Data Voting
+    document.getElementById('voteForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const btn = document.getElementById('btnSubmit');
+      btn.disabled = true;
+      btn.innerText = "Submitting...";
+
+      const kandidatVal = document.querySelector('input[name="kandidat"]:checked').value;
+
+      const payload = {
+        nisn: savedNisn,
+        kandidat: kandidatVal,
+        tabSwitches: jumlahPindahTab
+      };
+
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'text/plain;charset=utf-8' 
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success') {
+          alert("TERIMA KASIH SUDAH MEMILIH.");
+          if (document.exitFullscreen) document.exitFullscreen();
+          window.location.reload();
+        } else {
+          // Jika NISN Salah atau Sudah Pernah Digunakan
+          alert("Gagal: " + data.message);
+          btn.disabled = false;
+          btn.innerText = "Send Vote";
+          backToStep1(); // Mengembalikan ke formulir input NISN
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("KONEKSI BERMASALAH, SILAHKAN COBA LAGI");
+        btn.disabled = false;
+        btn.innerText = "Send Vote";
+      });
+    });
+  </script>
+</body>
+</html>
