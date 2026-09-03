@@ -31,9 +31,10 @@
     /* Helper untuk sembunyikan section */
     .hidden { display: none !important; }
     
-    /* Display NISN terkonfirmasi */
-    .user-badge { background: #f1f5f9; padding: 10px 14px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: #475569; display: flex; justify-content: space-between; align-items: center; }
+    /* Display NISN & Kelas terkonfirmasi */
+    .user-badge { background: #f1f5f9; padding: 12px 14px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: #475569; line-height: 1.6; }
     .user-badge strong { color: #0f172a; }
+    .user-badge-header { display: flex; justify-content: space-between; align-items: center; }
 
     /* Overlay Fullscreen */
     #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; text-align: center; padding: 20px; }
@@ -66,14 +67,17 @@
         <label for="nisnInput">NISN:</label>
         <input type="text" id="nisnInput" placeholder="Enter Your NISN" autofocus>
       </div>
-      <button type="button" onclick="goToStep2()"> Next &rarr;</button>
+      <button type="button" id="btnNext" onclick="goToStep2()"> Next &rarr;</button>
     </div>
 
     <!-- STEP 2: PILIH KANDIDAT (SEMBUNYI SAAT AWAL) -->
     <div id="step2" class="hidden">
       <div class="user-badge">
-        <span>NISN: <strong id="displayNisn">-</strong></span>
-        <span style="color: #2563eb; cursor: pointer; text-decoration: underline; font-size: 12px;" onclick="backToStep1()">Change</span>
+        <div class="user-badge-header">
+          <span>NISN: <strong id="displayNisn">-</strong></span>
+          <span style="color: #2563eb; cursor: pointer; text-decoration: underline; font-size: 12px;" onclick="backToStep1()">Change</span>
+        </div>
+        <div>Kelas: <strong id="displayKelas">-</strong></div>
       </div>
 
       <form id="voteForm">
@@ -103,8 +107,8 @@
   </div>
 
   <script>
-    // URL Web App Google Apps Script
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwthGXgV_LgfNCLLd-zYE4O-sJlvykmoFjqW5ER5VyMeMtb-1vi0uCHjiCGi2ngEQC5/exec"; 
+    // URL Web App Google Apps Script Anda
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKzg_vmBBK4vJ8IeXVVvtJXLrZS7XY0jA1en7PNVLz731mWKlnarqJuNL5Vjn1UxyJ/exec"; 
 
     let jumlahPindahTab = 0;
     let savedNisn = "";
@@ -117,7 +121,7 @@
       }
     }
 
-    // Fungsi Validasi Lokal NISN & Pindah ke Step 2
+    // Checking NISN & Ambil Data Kelas dari Sheet DPT
     function goToStep2() {
       const nisnVal = document.getElementById('nisnInput').value.trim();
       if (!nisnVal) {
@@ -125,12 +129,33 @@
         return;
       }
 
-      savedNisn = nisnVal;
-      document.getElementById('displayNisn').innerText = savedNisn;
-      
-      // Sembunyikan Step 1, Tampilkan Step 2
-      document.getElementById('step1').classList.add('hidden');
-      document.getElementById('step2').classList.remove('hidden');
+      const btnNext = document.getElementById('btnNext');
+      btnNext.disabled = true;
+      btnNext.innerText = "Checking NISN...";
+
+      fetch(`${SCRIPT_URL}?nisn=${encodeURIComponent(nisnVal)}`)
+        .then(res => res.json())
+        .then(data => {
+          btnNext.disabled = false;
+          btnNext.innerText = "Next \u2192";
+
+          if (data.status === 'found') {
+            savedNisn = nisnVal;
+            document.getElementById('displayNisn').innerText = savedNisn;
+            document.getElementById('displayKelas').innerText = data.kelas;
+
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+          } else {
+            alert("NISN tidak ditemukan di data DPT! Periksa kembali NISN Anda.");
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          btnNext.disabled = false;
+          btnNext.innerText = "Next \u2192";
+          alert("KONEKSI BERMASALAH, SILAHKAN COBA LAGI");
+        });
     }
 
     // Kembali ke Step 1 jika ingin mengganti NISN
@@ -139,7 +164,7 @@
       document.getElementById('step1').classList.remove('hidden');
     }
 
-    // Deteksi Pindah Tab
+    // Deteksi Pindah Tab (Hanya Alert, Tidak Dikirim ke Sheet)
     document.addEventListener('visibilitychange', function() {
       if (document.hidden) {
         jumlahPindahTab++;
@@ -157,10 +182,10 @@
 
       const kandidatVal = document.querySelector('input[name="kandidat"]:checked').value;
 
+      // Data dikirim tanpa tabSwitches agar tidak muncul angka 1 atau 0 di Kolom E
       const payload = {
         nisn: savedNisn,
-        kandidat: kandidatVal,
-        tabSwitches: jumlahPindahTab
+        kandidat: kandidatVal
       };
 
       fetch(SCRIPT_URL, {
@@ -177,11 +202,10 @@
           if (document.exitFullscreen) document.exitFullscreen();
           window.location.reload();
         } else {
-          // Jika NISN Salah atau Sudah Pernah Digunakan
           alert("Gagal: " + data.message);
           btn.disabled = false;
           btn.innerText = "KIRIM";
-          backToStep1(); // Mengembalikan ke formulir input NISN
+          backToStep1();
         }
       })
       .catch(err => {
