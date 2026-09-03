@@ -29,7 +29,7 @@
     .btn-secondary:hover { background: #e2e8f0; }
 
     /* Helper untuk sembunyikan section */
-    .hidden { display: none; }
+    .hidden { display: none !important; }
     
     /* Display NISN terkonfirmasi */
     .user-badge { background: #f1f5f9; padding: 10px 14px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: #475569; display: flex; justify-content: space-between; align-items: center; }
@@ -82,21 +82,19 @@
 
           <label class="option-card">
             <input type="radio" name="kandidat" value="1. Jansel Damianus Naibaho & Gabriela Andreane Naibaho" required>
-            <span><strong>01.</strong> 1. Jansel Damianus Naibaho & Gabriela Andreane Naibaho</span>
+            <span><strong>01.</strong> Jansel Damianus Naibaho & Gabriela Andreane Naibaho</span>
           </label>
 
           <label class="option-card">
             <input type="radio" name="kandidat" value="2. M. R. Putra Pandame Sipayung & Ana Velangkani Nainggolan">
-            <span><strong>02.</strong> 2. M. R. Putra Pandame Sipayung & Ana Velangkani Nainggolan </span>
+            <span><strong>02.</strong> M. R. Putra Pandame Sipayung & Ana Velangkani Nainggolan</span>
           </label>
-        </div>
 
           <label class="option-card">
             <input type="radio" name="kandidat" value="3. Timothy Sastrodimejo Djumhan & Geisha Tesalonika Pinem">
-            <span><strong>02.</strong> 3. Timothy Sastrodimejo Djumhan & Geisha Tesalonika Pinem</span>
+            <span><strong>03.</strong> Timothy Sastrodimejo Djumhan & Geisha Tesalonika Pinem</span>
           </label>
         </div>
-
 
         <button type="submit" id="btnSubmit">KIRIM</button>
       </form>
@@ -182,7 +180,7 @@
           // Jika NISN Salah atau Sudah Pernah Digunakan
           alert("Gagal: " + data.message);
           btn.disabled = false;
-          btn.innerText = "Send Vote";
+          btn.innerText = "KIRIM";
           backToStep1(); // Mengembalikan ke formulir input NISN
         }
       })
@@ -190,7 +188,7 @@
         console.error(err);
         alert("KONEKSI BERMASALAH, SILAHKAN COBA LAGI");
         btn.disabled = false;
-        btn.innerText = "Send Vote";
+        btn.innerText = "KIRIM";
       });
     });
   </script>
